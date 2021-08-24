@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+  <link href="https://www.unpkg.com/element-ui@2.15.3/lib/theme-chalk/index.css" rel="stylesheet">
+
+</head>
+<body>
+<script src="https://www.unpkg.com/vue/dist/vue.js"></script>
+<script src="https://www.unpkg.com/element-ui@2.15.3/lib/index.js"></script>
+<div id="app">
+</div>
+<template id="test">
+  <div>
+    <div v-for='item in 100'>
+      <el-button @click='clickPop(item)' :ref='`bt`+item'>click 激活</el-button>
+    </div>
+    <el-popover
+            v-if='showPop'
+            ref='pop'
+            :reference='reference'
+            placement="bottom"
+            title="标题"
+            width="200"
+            trigger="click"
+    >
+      <el-button @click='$refs.pop.doClose()'>自定义关闭按钮</el-button>
+    </el-popover>
+  </div>
+</template>
+<script>
+  var Main = {
+    template:'#test',
+    created(){
+      console.time('per')
+    },
+    mounted(){
+      let time = console.timeEnd('per')
+    },
+    data() {
+      return {
+        reference:{},
+        // 控制渲染条件 如果不用v-if会报错 具体可自行尝试
+        showPop: false,
+        // 保存当前激活的refrence id
+        activeId:'',
+      };
+    },
+    methods:{
+      clickPop(item){
+        // 这个操作是为了避免与源码中的 doToggle方法冲突
+        if (this.activeId === item && this.showPop) return
+        this.showPop = false
+        this.activeId = item
+        // 因为reference是需要获取dom的引用 所以需要是$el
+        this.reference = this.$refs['bt'+item][0].$el
+        this.$nextTick(() => {
+          // 等待显示的popover销毁后再 重新渲染新的popover
+          this.showPop = true
+          this.$nextTick(() => {
+            // 此时才能获取refs引用
+            this.$refs.pop.doShow()
+          })
+        })
+      }
+    }
+  };
+  var Ctor = Vue.extend(Main)
+  new Ctor().$mount('#app')
+</script>
+</body>
+</html>
